@@ -204,6 +204,8 @@ typedef struct
         WIN_FUNC( CopyFileW )
         WIN_FUNC( GetModuleHandleA )
         WIN_FUNC( SetProcessValidCallTargets )
+        WIN_FUNC( GetProcAddress )
+        WIN_FUNC( MultiByteToWideChar )
 
         /* Ntdll.dll */
         WIN_FUNC( LdrLoadDll )
@@ -219,12 +221,16 @@ typedef struct
         WIN_FUNC( RtlCreateTimer )
         NTSTATUS ( NTAPI* RtlCreateTimerQueue ) ( PHANDLE TimerQueueHandle );
         WIN_FUNC( RtlDeleteTimerQueue )
-        WIN_FUNC( RtlCaptureContext );
-        WIN_FUNC( RtlAddVectoredExceptionHandler );
-        WIN_FUNC( RtlRemoveVectoredExceptionHandler );
-        WIN_FUNC( NtClose );
-        WIN_FUNC( NtSetEvent );
-        WIN_FUNC( NtCreateEvent );
+        WIN_FUNC( RtlCaptureContext )
+        WIN_FUNC( RtlAddVectoredExceptionHandler )
+        WIN_FUNC( RtlRemoveVectoredExceptionHandler )
+        WIN_FUNC( NtClose )
+        WIN_FUNC( NtSetEvent )
+        WIN_FUNC( NtCreateEvent )
+        WIN_FUNC( NtMapViewOfSection )
+        WIN_FUNC( NtUnmapViewOfSection )
+        WIN_FUNC( NtCreateSection )
+        WIN_FUNC( NtFlushInstructionCache )
 
         // WinHTTP
         // NOTE: maybe change to WinInet

