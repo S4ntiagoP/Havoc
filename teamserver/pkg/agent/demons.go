@@ -505,7 +505,7 @@ func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string) (
 
 		if Arguments, ok := Optional["Arguments"].(string); ok {
 			if Parameters, err = base64.StdEncoding.DecodeString(Arguments); !ok {
-				return nil, errors.New("FunctionName not defined")
+				return nil, errors.New("Arguments not defined")
 			}
 		} else {
 			return nil, errors.New("CoffeeLdr: Arguments not defined")
@@ -1704,6 +1704,67 @@ func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string) (
 			}
 
 			return nil, nil
+		}
+
+		break
+
+	case COMMAND_RUN_PE:
+
+		var (
+			FunctionName string
+			ObjectFile   []byte
+			Parameters   []byte
+			Flags        uint32
+			ok           bool
+		)
+
+		if Arguments, ok := Optional["Arguments"].(string); ok {
+			if Parameters, err = base64.StdEncoding.DecodeString(Arguments); !ok {
+				return nil, errors.New("Arguments not defined")
+			}
+		} else {
+			return nil, errors.New("PeLdr: Arguments not defined")
+		}
+
+		if Binary, ok := Optional["Binary"].(string); ok {
+			if ObjectFile, err = base64.StdEncoding.DecodeString(Binary); err != nil {
+				logger.Debug("Failed to turn base64 encoded object file into bytes: " + err.Error())
+				return nil, err
+			}
+		}
+
+		if FunctionName, ok = Optional["FunctionName"].(string); !ok {
+			return nil, errors.New("PeLdr: FunctionName not defined")
+		}
+
+		if ObjectFlags, ok := Optional["Flags"].(string); ok {
+
+			switch strings.ToLower(ObjectFlags) {
+			case "non-threaded":
+				Flags = PELDR_FLAG_NON_THREADED
+				break
+
+			case "threaded":
+				Flags = PELDR_FLAG_THREADED
+				break
+
+			case "default":
+				Flags = PELDR_FLAG_DEFAULT
+				break
+
+			default:
+				Flags = 0
+			}
+
+		} else {
+			return nil, errors.New("PeLdr: Flags not defined")
+		}
+
+		job.Data = []interface{}{
+			FunctionName,
+			ObjectFile,
+			Parameters,
+			Flags,
 		}
 
 		break
@@ -2933,6 +2994,9 @@ func (a *Agent) TaskDispatch(CommandID int, Parser *parser.Parser, teamserver Te
 			break
 
 		}
+
+	case COMMAND_RUN_PE:
+		
 
 	case COMMAND_ERROR:
 		var (

@@ -37,6 +37,7 @@ const (
 	COMMAND_PIVOT                   = 2520
 	COMMAND_TRANSFER                = 2530
 	COMMAND_SOCKET                  = 2540
+	COMMAND_RUN_PE                  = 2550
 
 	DEMON_INFO = 89
 
@@ -129,4 +130,10 @@ const (
 	COFFEELDR_FLAG_NON_THREADED = 0
 	COFFEELDR_FLAG_THREADED     = 1
 	COFFEELDR_FLAG_DEFAULT      = 2
+)
+
+const (
+	PELDR_FLAG_NON_THREADED = 0
+	PELDR_FLAG_THREADED     = 1
+	PELDR_FLAG_DEFAULT      = 2
 )

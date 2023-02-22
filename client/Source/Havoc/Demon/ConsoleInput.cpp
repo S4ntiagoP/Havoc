@@ -1724,6 +1724,31 @@ auto DemonCommands::DispatchCommand( bool Send, QString TaskID, const QString& c
                 SEND( Execute.Pivot( TaskID, Command, Param ) )
             }
         }
+        else if ( InputCommands[ 0 ].compare( "run-pe" ) == 0 )
+        {
+            if ( InputCommands.length() < 2 )
+            {
+                CONSOLE_ERROR( "Not enough arguments" )
+                return false;
+            }
+
+            auto Path = InputCommands[ 1 ];
+            auto Args = QByteArray();
+
+            if ( InputCommands.size() > 3 )
+                Args = JoinAtIndex( InputCommands, 3 ).toUtf8();
+
+            if ( ! QFile::exists( Path ) )
+            {
+                CONSOLE_ERROR( "Specified object file not found: " + Path )
+                return false;
+            }
+
+            TaskID                     = CONSOLE_INFO( "Tasked demon to execute a PE: " + Path );
+            CommandInputList[ TaskID ] = commandline;
+
+            SEND( Execute.RunPe( TaskID, "main", Path, Args, "default" ); )
+        }
         else if ( InputCommands[ 0 ].compare( "exit" ) == 0 )
         {
             if ( InputCommands.length() > 1 )

@@ -454,6 +454,15 @@ std::vector<DemonCommands::Command_t> DemonCommands::DemonCommandList = {
             },
         },
         {
+            .CommandString   = "run-pe",
+            .Description     = "execute an unmanaged PE in memory",
+            .Behavior        = BEHAVIOR_API_ONLY,
+            .MitreTechniques = {"T1620"},
+            .Usage           = "[/path/to/PE.exe] (args)",
+            .Example         = R"(/tmp/mimikatz.exe coffe)",
+            NO_SUBCOMMANDS
+        },
+        {
             .CommandString  = "net",
             .Description    = "network and host enumeration module",
             .Behavior       = BEHAVIOR_API_ONLY,

@@ -117,6 +117,8 @@ typedef struct
             PVOID   ThreadStartAddr;
             BOOL    CoffeeThreaded;
             BOOL    CoffeeVeh;
+            BOOL    PeThreaded;
+            BOOL    PeVeh;
             DWORD   DownloadChunkSize;
         } Implant;
 

