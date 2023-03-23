@@ -53,7 +53,8 @@ typedef struct
     /* MetaData */
     PPACKAGE MetaData;
 
-    BOOL IsMetadataEncrypted;
+    /* The last RequestID recieved by the TS */
+    UINT32 CurrentRequestID;
 
     struct {
         UINT32  AgentID;

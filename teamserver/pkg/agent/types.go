@@ -65,9 +65,10 @@ type TeamServer interface {
 }
 
 type Job struct {
-	Command uint32
-	Data    []interface{}
-	Payload []byte
+	RequestID uint32
+	Command   uint32
+	Data      []interface{}
+	Payload   []byte
 
 	CommandLine string
 	TaskID      string
@@ -122,6 +123,7 @@ type SocksServer struct {
 type Agent struct {
 	NameID     string
 	JobQueue   []Job
+	Tasks      []Job
 	SessionDir string
 	Active     bool
 	Reason     string
