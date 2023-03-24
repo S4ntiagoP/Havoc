@@ -3487,54 +3487,9 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 
 			break
 
-		case CALLBACK_MSG_GOOD:
-			if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_GOOD", AgentID))
-				var String = Parser.ParseString()
-
-				OutputMap["Type"] = "Good"
-				OutputMap["Message"] = String
-
-				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
-			} else {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_GOOD, Invalid packet", AgentID))
-			}
-
-			break
-
-		case CALLBACK_MSG_INFO:
-			if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_INFO", AgentID))
-				var String = Parser.ParseString()
-
-				OutputMap["Type"] = "Info"
-				OutputMap["Message"] = String
-
-				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
-			} else {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_INFO, Invalid packet", AgentID))
-			}
-
-			break
-
-		case CALLBACK_MSG_ERROR:
-			if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_ERROR", AgentID))
-				var String = Parser.ParseString()
-
-				OutputMap["Type"] = "Error"
-				OutputMap["Message"] = String
-
-				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
-			} else {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - CALLBACK_MSG_ERROR, Invalid packet", AgentID))
-			}
-
-			break
-
-		case COMMAND_EXCEPTION:
+		case COMMAND_INLINEEXECUTE_EXCEPTION:
 			if Parser.CanIRead([]parser.ReadType{parser.ReadInt32, parser.ReadInt64}) {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_EXCEPTION", AgentID))
+				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_EXCEPTION", AgentID))
 				var (
 					Exception = Parser.ParseInt32()
 					Address   = Parser.ParseInt64()
@@ -3545,25 +3500,47 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 
 				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 			} else {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_EXCEPTION, Invalid packet", AgentID))
+				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_EXCEPTION, Invalid packet", AgentID))
 			}
 
 			break
 
-		case COMMAND_SYMBOL_NOT_FOUND:
+		case COMMAND_INLINEEXECUTE_SYMBOL_NOT_FOUND:
 
 			if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
 				var LibAndFunc = Parser.ParseString()
 
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_SYMBOL_NOT_FOUND, LibAndFunc: %s", AgentID, LibAndFunc))
+				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_SYMBOL_NOT_FOUND, LibAndFunc: %s", AgentID, LibAndFunc))
 
 				OutputMap["Type"] = "Error"
 				OutputMap["Message"] = "Symbol not found: " + LibAndFunc
 				a.RequestCompleted(RequestID)
 				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 			} else {
-				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_SYMBOL_NOT_FOUND, Invalid packet", AgentID))
+				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_SYMBOL_NOT_FOUND, Invalid packet", AgentID))
 			}
+
+			break
+
+		case COMMAND_INLINEEXECUTE_RAN_OK:
+
+			logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_RAN_OK", AgentID))
+
+			OutputMap["Type"] = "Info"
+			OutputMap["Message"] = "BOF execution completed"
+			a.RequestCompleted(RequestID)
+			teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
+
+			break
+
+		case COMMAND_INLINEEXECUTE_COULD_NO_RUN:
+
+			logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_COULD_NO_RUN", AgentID))
+
+			OutputMap["Type"] = "Error"
+			OutputMap["Message"] = "Failed to execute object file"
+			a.RequestCompleted(RequestID)
+			teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 
 			break
 
@@ -3601,23 +3578,6 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 				} else {
 					logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_ERROR - ERROR_WIN32_LASTERROR, Invalid packet", AgentID))
 				}
-				break
-
-			case ERROR_COFFEXEC:
-				if Parser.CanIRead([]parser.ReadType{parser.ReadInt32}) {
-					var (
-						Status = Parser.ParseInt32()
-					)
-
-					logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_ERROR - ERROR_COFFEXEC, Status: %d", AgentID, Status))
-
-					Message["Type"] = "Error"
-					Message["Message"] = fmt.Sprintf("Failed to execute object file [%v]", Status)
-					a.RequestCompleted(RequestID)
-				} else {
-					logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_ERROR - ERROR_COFFEXEC, Invalid packet", AgentID))
-				}
-
 				break
 
 			case ERROR_TOKEN:
