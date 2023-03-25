@@ -218,6 +218,25 @@ func handleDemonAgent(Teamserver agent.TeamServer, Header agent.Header) (bytes.B
 
 							break
 
+						case agent.COMMAND_INLINEEXECUTE:
+
+							found := false
+							Agent = Teamserver.AgentInstance(Header.AgentID)
+							for _, BofCallback := range Agent.BofCallbacks {
+								if BofCallback.TaskID == job[j].RequestID {
+									found = true
+									break
+								}
+							}
+
+							// only show the task on the console if the BOF output has no callback
+							if found == false {
+								payload = agent.BuildPayloadMessage([]agent.Job{job[j]}, Agent.Encryption.AESKey, Agent.Encryption.AESIv)
+								CallbackSizes[int64(Header.AgentID)] = append(CallbackSizes[int64(Header.AgentID)], payload...)
+							}
+
+							break
+
 						default:
 							//logger.Debug("Default")
 							/* build the task payload */
