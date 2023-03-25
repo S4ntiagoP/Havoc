@@ -151,6 +151,7 @@ const (
 
 const (
 	HAVOC_CONSOLE_MESSAGE = 0x80
+	HAVOC_BOF_CALLBACK    = 0x81
 )
 
 const (

@@ -91,7 +91,7 @@ func (a *Agent) TeamserverTaskPrepare(Command string, Console func(AgentID strin
 	return nil
 }
 
-func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string) (*Job, error) {
+func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string, ClientID string) (*Job, error) {
 	var (
 		job = &Job{
 			RequestID: rand.Uint32(),
@@ -110,6 +110,11 @@ func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string) (
 
 	if val, ok := Optional["TaskID"]; ok {
 		job.TaskID = val.(string)
+
+		RequestID, err := strconv.ParseInt(job.TaskID, 16, 64)
+		if err == nil {
+			job.RequestID = uint32(RequestID)
+		}
 	}
 
 	switch Command {
@@ -510,6 +515,20 @@ func (a *Agent) TaskPrepare(Command int, Info any, Message *map[string]string) (
 			Flags        uint32
 			ok           bool
 		)
+
+		if Arguments, ok := Optional["HasCallback"].(string); ok && Arguments == "true" {
+			// if there is a callback for this BOF, means that we need to
+			// store all the output and send it back to the python module
+			// instead of simply printing it on the console
+
+			var bofcallback = &BofCallback{
+				TaskID:   job.RequestID,
+				Output:   "",
+				ClientID: ClientID,
+			}
+
+			a.BofCallbacks = append(a.BofCallbacks, bofcallback)
+		}
 
 		if Arguments, ok := Optional["Arguments"].(string); ok {
 			if Parameters, err = base64.StdEncoding.DecodeString(Arguments); !ok {
@@ -2969,13 +2988,26 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 			case CALLBACK_OUTPUT:
 				if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
 					logger.Debug(fmt.Sprintf("Agent: %x, Command: BEACON_OUTPUT - CALLBACK_OUTPUT", AgentID))
-					var Output = make(map[string]string)
 
-					Output["Type"] = "Good"
-					Output["Output"] = Parser.ParseString()
-					Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
-					if len(Output["Output"]) > 0 {
-						teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+					found := false
+					for _, BofCallback := range a.BofCallbacks {
+						if BofCallback.TaskID == RequestID {
+							// store the output and later send it back to the python module
+							BofCallback.Output += Parser.ParseString()
+							found = true
+							break
+						}
+					}
+
+					if found == false {
+						// simply print the output on the agent console
+						var Output = make(map[string]string)
+						Output["Type"] = "Good"
+						Output["Output"] = Parser.ParseString()
+						Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
+						if len(Output["Output"]) > 0 {
+							teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+						}
 					}
 
 					break
@@ -2986,13 +3018,26 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 			case CALLBACK_OUTPUT_OEM:
 				if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
 					logger.Debug(fmt.Sprintf("Agent: %x, Command: BEACON_OUTPUT - CALLBACK_OUTPUT_OEM", AgentID))
-					var Output = make(map[string]string)
 
-					Output["Type"] = "Good"
-					Output["Output"] = Parser.ParseUTF16String()
-					Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
-					if len(Output["Output"]) > 0 {
-						teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+					found := false
+					for _, BofCallback := range a.BofCallbacks {
+						if BofCallback.TaskID == RequestID {
+							// store the output and later send it back to the python module
+							BofCallback.Output += Parser.ParseUTF16String()
+							found = true
+							break
+						}
+					}
+
+					if found == false {
+						// simply print the output on the agent console
+						var Output = make(map[string]string)
+						Output["Type"] = "Good"
+						Output["Output"] = Parser.ParseUTF16String()
+						Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
+						if len(Output["Output"]) > 0 {
+							teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+						}
 					}
 
 					break
@@ -3004,14 +3049,27 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 				if Parser.CanIRead([]parser.ReadType{parser.ReadBytes}) {
 					logger.Debug(fmt.Sprintf("Agent: %x, Command: BEACON_OUTPUT - CALLBACK_ERROR", AgentID))
 
-					var Output = make(map[string]string)
-					Output["Type"] = typeError
-					Output["Output"] = Parser.ParseString()
-					Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
-					if len(Output["Output"]) > 0 {
-						teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+					found := false
+					for _, BofCallback := range a.BofCallbacks {
+						if BofCallback.TaskID == RequestID {
+							// store the output and later send it back to the python module
+							BofCallback.Output += Parser.ParseString()
+							found = true
+							break
+						}
 					}
-					
+
+					if found == false {
+						// simply print the output on the agent console
+						var Output = make(map[string]string)
+						Output["Type"] = typeError
+						Output["Output"] = Parser.ParseString()
+						Output["Message"] = fmt.Sprintf("Received Output [%v bytes]:", len(Output["Output"]))
+						if len(Output["Output"]) > 0 {
+							teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, Output)
+						}
+					}
+
 					break
 				} else {
 					logger.Debug(fmt.Sprintf("Agent: %x, Command: BEACON_OUTPUT - CALLBACK_ERROR, Invalid packet", AgentID))
@@ -3497,7 +3555,7 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 
 				OutputMap["Type"] = "Error"
 				OutputMap["Message"] = fmt.Sprintf("Exception %v [%x] accured while executing BOF at address %x", win32.StatusToString(int64(Exception)), Exception, Address)
-
+				a.RequestCompleted(RequestID)
 				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 			} else {
 				logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_EXCEPTION, Invalid packet", AgentID))
@@ -3526,10 +3584,27 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 
 			logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_RAN_OK", AgentID))
 
-			OutputMap["Type"] = "Info"
-			OutputMap["Message"] = "BOF execution completed"
+			found := false
+			for i, BofCallback := range a.BofCallbacks {
+				if BofCallback.TaskID == RequestID {
+					// send the output back to the python module
+					OutputMap["Worked"] = "true"
+					OutputMap["Output"] = BofCallback.Output
+					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%x", RequestID))
+					teamserver.PythonModuleCallback(BofCallback.ClientID, a.NameID, HAVOC_BOF_CALLBACK, OutputMap)
+					a.BofCallbacks = append(a.BofCallbacks[:i], a.BofCallbacks[i+1:]...)
+					found = true
+					break
+				}
+			}
+
+			if found == false {
+				OutputMap["Type"] = "Info"
+				OutputMap["Message"] = "BOF execution completed"
+				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
+			}
+
 			a.RequestCompleted(RequestID)
-			teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 
 			break
 
@@ -3537,10 +3612,27 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 
 			logger.Debug(fmt.Sprintf("Agent: %x, Command: COMMAND_INLINEEXECUTE - COMMAND_INLINEEXECUTE_COULD_NO_RUN", AgentID))
 
-			OutputMap["Type"] = "Error"
-			OutputMap["Message"] = "Failed to execute object file"
+			found := false
+			for i, BofCallback := range a.BofCallbacks {
+				if BofCallback.TaskID == RequestID {
+					// send the output back to the python module
+					OutputMap["Worked"] = "false"
+					OutputMap["Output"] = ""
+					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%x", RequestID))
+					teamserver.PythonModuleCallback(BofCallback.ClientID, a.NameID, HAVOC_BOF_CALLBACK, OutputMap)
+					a.BofCallbacks = append(a.BofCallbacks[:i], a.BofCallbacks[i+1:]...)
+					found = true
+					break
+				}
+			}
+
+			if found == false {
+				OutputMap["Type"] = "Error"
+				OutputMap["Message"] = "Failed to execute object file"
+				teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
+			}
+
 			a.RequestCompleted(RequestID)
-			teamserver.AgentConsole(a.NameID, HAVOC_CONSOLE_MESSAGE, OutputMap)
 
 			break
 

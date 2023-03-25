@@ -178,7 +178,16 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 								} else {
 									*Message = make(map[string]string)
 
-									job, err = t.Agents.Agents[i].TaskPrepare(command, pk.Body.Info, Message)
+									var ClientID string
+									ClientID = ""
+									for _, client := range t.Clients {
+										if client.Username == pk.Head.User {
+											ClientID = client.ClientID
+											break
+										}
+									}
+
+									job, err = t.Agents.Agents[i].TaskPrepare(command, pk.Body.Info, Message, ClientID)
 									if err != nil || job == nil {
 										Console(t.Agents.Agents[i].NameID, map[string]string{
 											"Type":    "Error",

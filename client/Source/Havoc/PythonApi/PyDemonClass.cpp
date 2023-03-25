@@ -258,7 +258,7 @@ PyObject* DemonClass_InlineExecuteGetOutput( PPyDemonClass self, PyObject *args 
     PyObject* Threaded   = nullptr;
     PyObject* Callback   = nullptr;
 
-    if ( ! PyArg_ParseTuple( args, "sssSOO", &TaskID, &EntryFunc, &Path, &PyArgBytes, &Threaded, &Callback ) )
+    if ( ! PyArg_ParseTuple( args, "OssSO", &Callback, &EntryFunc, &Path, &PyArgBytes, &Threaded ) )
         return nullptr;
 
     if ( PyObject_IsTrue( Threaded ) == true )
@@ -293,12 +293,16 @@ PyObject* DemonClass_InlineExecuteGetOutput( PPyDemonClass self, PyObject *args 
                 auto ObjArgs       = PyBytes_AS_STRING( PyArgBytes );
                 auto ArgsByteArray = QByteArray( ObjArgs, ArgSize );
 
-                Sessions.InteractedWidget->DemonCommands->Execute.InlineExecute( ( char* ) TaskID, ( char* ) EntryFunc, ( char* ) Path, ArgsByteArray, Flags );
+                // create a new TaskID
+                auto TaskID = QString( Util::gen_random( 8 ).c_str() );
 
+                // save it the TaskID and the callback function
+                Sessions.TaskIDToPythonCallbacks.insert(pair<QString, PyObject*>(TaskID, Callback));
+                Py_XINCREF(Callback);
 
-                PyObject *arglist;
-                arglist = Py_BuildValue("(s)", "foo bar");
-                PyObject_CallObject(Callback, arglist);
+                Sessions.InteractedWidget->DemonCommands->Execute.InlineExecuteGetOutput( ( char* ) TaskID.toStdString().c_str(), ( char* ) EntryFunc, ( char* ) Path, ArgsByteArray, Flags );
+
+                return PyUnicode_FromString( TaskID.toStdString().c_str() );
             }
 
             break;
