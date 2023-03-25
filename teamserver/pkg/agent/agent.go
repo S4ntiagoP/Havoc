@@ -511,6 +511,8 @@ func (a *Agent) IsKnownRequestID(RequestID uint32, CommandID uint32) bool {
 	switch CommandID {
 	case COMMAND_SOCKET:
 		return true
+	case COMMAND_PIVOT:
+		return true
 	}
 
 	for i := range a.Tasks {
@@ -623,7 +625,7 @@ func (a *Agent) PivotAddJob(job Job) {
 		Command: COMMAND_PIVOT,
 		Data: []interface{}{
 			DEMON_PIVOT_SMB_COMMAND,
-			AgentID,
+			uint32(AgentID),
 			Packer.Buffer(),
 		},
 	}
@@ -653,7 +655,7 @@ func (a *Agent) PivotAddJob(job Job) {
 			Command: COMMAND_PIVOT,
 			Data: []interface{}{
 				DEMON_PIVOT_SMB_COMMAND,
-				AgentID,
+				uint32(AgentID),
 				Packer.Buffer(),
 			},
 		}
