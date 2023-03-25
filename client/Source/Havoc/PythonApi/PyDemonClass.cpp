@@ -245,7 +245,6 @@ PyObject* DemonClass_InlineExecute( PPyDemonClass self, PyObject *args )
     Py_RETURN_NONE;
 }
 
-// Demon.InlineExecuteGetOutput( TaskID: str, EntryFunc: str, Path: str, Args: str, Threaded: bool )
 PyObject* DemonClass_InlineExecuteGetOutput( PPyDemonClass self, PyObject *args )
 {
     spdlog::debug( "[PyApi] Demon::InlineExecuteGetOutput" );
@@ -255,22 +254,14 @@ PyObject* DemonClass_InlineExecuteGetOutput( PPyDemonClass self, PyObject *args 
     char*     Path       = nullptr;
     PyObject* PyArgBytes = nullptr;
     auto      Flags      = QString();
-    PyObject* Threaded   = nullptr;
     PyObject* Callback   = nullptr;
 
-    if ( ! PyArg_ParseTuple( args, "OssSO", &Callback, &EntryFunc, &Path, &PyArgBytes, &Threaded ) )
+    if ( ! PyArg_ParseTuple( args, "OssS", &Callback, &EntryFunc, &Path, &PyArgBytes ) )
         return nullptr;
 
-    if ( PyObject_IsTrue( Threaded ) == true )
-    {
-        Flags = "threaded";
-        spdlog::debug( "execute object file in threaded" );
-    }
-    else
-    {
-        Flags = "non-threaded";
-        spdlog::debug( "execute object file in non-threaded" );
-    }
+    // InlineExecuteGetOutput only works in "non-threaded" mode
+    // this is to avoid "RequestID" mixups
+    Flags = "non-threaded";
 
     if ( ! PyCallable_Check( Callback ) )
     {

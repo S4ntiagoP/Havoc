@@ -3590,7 +3590,7 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 					// send the output back to the python module
 					OutputMap["Worked"] = "true"
 					OutputMap["Output"] = BofCallback.Output
-					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%x", RequestID))
+					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%08x", RequestID))
 					teamserver.PythonModuleCallback(BofCallback.ClientID, a.NameID, HAVOC_BOF_CALLBACK, OutputMap)
 					a.BofCallbacks = append(a.BofCallbacks[:i], a.BofCallbacks[i+1:]...)
 					found = true
@@ -3618,7 +3618,7 @@ func (a *Agent) TaskDispatch(RequestID uint32, CommandID uint32, Parser *parser.
 					// send the output back to the python module
 					OutputMap["Worked"] = "false"
 					OutputMap["Output"] = ""
-					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%x", RequestID))
+					OutputMap["TaskID"] = strings.ToUpper(fmt.Sprintf("%08x", RequestID))
 					teamserver.PythonModuleCallback(BofCallback.ClientID, a.NameID, HAVOC_BOF_CALLBACK, OutputMap)
 					a.BofCallbacks = append(a.BofCallbacks[:i], a.BofCallbacks[i+1:]...)
 					found = true
