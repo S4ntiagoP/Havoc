@@ -506,7 +506,13 @@ func ParseDemonRegisterRequest(AgentID int, Parser *parser.Parser) *Agent {
 }
 
 // check that the request the agent is valid
-func (a *Agent) IsKnownRequestID(RequestID uint32) bool {
+func (a *Agent) IsKnownRequestID(RequestID uint32, CommandID uint32) bool {
+	// some commands are always accepted because they don't follow the "send task and get response" format
+	switch CommandID {
+	case COMMAND_SOCKET:
+		return true
+	}
+
 	for i := range a.Tasks {
 		if a.Tasks[i].RequestID == RequestID {
 			return true

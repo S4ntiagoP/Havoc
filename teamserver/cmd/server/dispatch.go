@@ -188,7 +188,7 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 									}
 
 									job, err = t.Agents.Agents[i].TaskPrepare(command, pk.Body.Info, Message, ClientID)
-									if err != nil || job == nil {
+									if err != nil {
 										Console(t.Agents.Agents[i].NameID, map[string]string{
 											"Type":    "Error",
 											"Message": "Failed to create Task: " + err.Error(),
@@ -196,7 +196,9 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 										return
 									}
 
-									t.Agents.Agents[i].AddRequest(*job)
+									if job != nil {
+										t.Agents.Agents[i].AddRequest(*job)
+									}
 
 									if t.Agents.Agents[i].Pivots.Parent != nil {
 										// if it's a pivot agent then add the job to the
@@ -211,7 +213,9 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 
 									} else {
 										// if it's a direct agent add the job to the direct agent.
-										t.Agents.Agents[i].AddJobToQueue(*job)
+										if job != nil {
+											t.Agents.Agents[i].AddJobToQueue(*job)
+										}
 
 										logr.LogrInstance.AddAgentInput("Demon", pk.Body.Info["DemonID"].(string), pk.Head.User, pk.Body.Info["TaskID"].(string), pk.Body.Info["CommandLine"].(string), time.Now().UTC().Format("02/01/2006 15:04:05"))
 
